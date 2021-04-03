@@ -6,10 +6,38 @@ import * as serviceWorker from "./serviceWorker";
 import { BrowserRouter } from "react-router-dom";
 import { Provider } from "react-redux";
 
-import { createStore } from "redux";
-import reducer from "./store/reducer";
+import thunk from "redux-thunk";
 
-const store = createStore(reducer);
+import { createStore, applyMiddleware, compose, combineReducers } from "redux";
+import burgerBuilderReducer from "./store/reducers/burgerBuilder";
+import orderReducer from "./store/reducers/order";
+import authReducer from "./store/reducers/auth";
+
+// * middleware example
+// const logger = store => {
+//     return next => {
+//         return action => {
+//             console.log("[Middleware] Dispatching", action);
+//             const result = next(action);
+//             console.log("[Middleware] next state", store.getState());
+//             return result;
+//         }
+//     }
+// }
+
+const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
+
+const rootReducer = combineReducers({
+    burgerBuilder: burgerBuilderReducer,
+    order: orderReducer,
+    auth: authReducer
+});
+
+const store = createStore(rootReducer, composeEnhancers(
+    applyMiddleware(thunk)
+)
+    // window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()
+);
 
 const app = (
     <Provider store={store}>

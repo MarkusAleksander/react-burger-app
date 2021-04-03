@@ -10,6 +10,9 @@ import { connect } from "react-redux";
 
 import Input from "./../../../components/UI/Input/Input";
 
+import withErrorHandler from "./../../../hoc/withErrorHandler/withErrorHandler";
+import * as actions from "./../../../store/actions";
+
 class ContactData extends Component {
     state = {
         orderForm: {
@@ -94,21 +97,18 @@ class ContactData extends Component {
                         },
                     ],
                 },
-                value: "",
+                value: "fastest",
                 validation: {},
                 valid: true,
                 touched: true,
             },
         },
-        formIsValid: false,
-        loading: false,
+        formIsValid: false
     };
 
     orderHandler = (event) => {
         event.preventDefault();
-        this.setState({
-            loading: true,
-        });
+
         const formData = {};
 
         for (let formElementIdentifier in this.state.orderForm) {
@@ -117,25 +117,13 @@ class ContactData extends Component {
             ].value;
         }
 
-        const order = {
+        const orderData = {
             ingredients: this.props.ingredients,
             totalPrice: this.props.totalPrice,
             orderData: formData,
         };
-        axios
-            .post("/orders.json", order)
-            .then((response) => {
-                this.setState({
-                    loading: false,
-                });
-                this.props.history.push("/");
-            })
-            .catch((error) => {
-                this.setState({
-                    loading: false,
-                });
-                console.log(error);
-            });
+
+        this.props.onOrderBurger(orderData, this.props.idToken);
     };
 
     checkValidity(value, rules) {
@@ -155,6 +143,16 @@ class ContactData extends Component {
 
         if (rules.maxLength) {
             isValid = value.length <= rules.maxLength && isValid;
+        }
+
+        if (rules.isEmail) {
+            const pattern = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
+            isValid = pattern.test(value) && isValid;
+        }
+
+        if (rules.isNumeric) {
+            const pattern = /^\d+$/;
+            isValid = pattern.test(value) && isValid;
         }
 
         return isValid;
@@ -219,7 +217,7 @@ class ContactData extends Component {
             </form>
         );
 
-        if (this.state.loading) {
+        if (this.props.loading) {
             form = <Spinner />;
         }
 
@@ -234,9 +232,17 @@ class ContactData extends Component {
 
 const mapStateToProps = state => {
     return {
-        ingredients: state.ingredients,
-        totalPrice: state.totalPrice
+        ingredients: state.burgerBuilder.ingredients,
+        totalPrice: state.burgerBuilder.totalPrice,
+        loading: state.order.loading,
+        idToken: state.auth.idToken
     }
 }
 
-export default connect(mapStateToProps)(ContactData);
+const mapDispatchToProps = dispatch => {
+    return {
+        onOrderBurger: (orderData, idToken) => dispatch(actions.purchaseBurger(orderData, idToken))
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(withErrorHandler(ContactData, axios));
