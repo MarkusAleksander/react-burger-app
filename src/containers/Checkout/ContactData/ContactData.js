@@ -12,6 +12,7 @@ import Input from "./../../../components/UI/Input/Input";
 
 import withErrorHandler from "./../../../hoc/withErrorHandler/withErrorHandler";
 import * as actions from "./../../../store/actions";
+import { updateObject } from "./../../../shared/utility";
 
 class ContactData extends Component {
     state = {
@@ -121,6 +122,7 @@ class ContactData extends Component {
             ingredients: this.props.ingredients,
             totalPrice: this.props.totalPrice,
             orderData: formData,
+            localId: this.props.localId
         };
 
         this.props.onOrderBurger(orderData, this.props.idToken);
@@ -159,19 +161,18 @@ class ContactData extends Component {
     }
 
     inputChangedHandler = (event, inputIdentifier) => {
-        const updatedOrderForm = {
-            ...this.state.orderForm,
-        };
-        const updatedFormElement = { ...updatedOrderForm[inputIdentifier] };
-        updatedFormElement.value = event.target.value;
-        updatedOrderForm[inputIdentifier] = updatedFormElement;
+        const updatedFormElement = updateObject(this.state.orderForm[inputIdentifier], {
+            value: event.target.value,
+            valid: this.checkValidity(
+                event.target.value,
+                this.state.orderForm[inputIdentifier].validation
+            ),
+            touched: true
+        });
 
-        updatedFormElement.valid = this.checkValidity(
-            updatedFormElement.value,
-            updatedFormElement.validation
-        );
-
-        updatedFormElement.touched = true;
+        const updatedOrderForm = updateObject(this.state.orderForm, {
+            [inputIdentifier]: updatedFormElement
+        });
 
         let formIsValid = true;
         for (let inputIdentifier in updatedOrderForm) {
@@ -235,7 +236,8 @@ const mapStateToProps = state => {
         ingredients: state.burgerBuilder.ingredients,
         totalPrice: state.burgerBuilder.totalPrice,
         loading: state.order.loading,
-        idToken: state.auth.idToken
+        idToken: state.auth.idToken,
+        localId: state.auth.localId
     }
 }
 
