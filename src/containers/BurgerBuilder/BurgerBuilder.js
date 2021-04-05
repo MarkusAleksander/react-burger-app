@@ -15,9 +15,7 @@ import withErrorHandler from "../../hoc/withErrorHandler/withErrorHandler";
 
 import axios from "../../axios";
 
-
-
-class BurgerBuilder extends Component {
+export class BurgerBuilder extends Component {
     state = {
         // ingredients: null,
         // totalPrice: 4,
